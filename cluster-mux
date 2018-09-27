@@ -1,0 +1,61 @@
+#!/bin/sh
+
+#Splits hosts out into their own windows in a tmux session.
+#
+# Written by Steven Callister
+# TODO if splitting a window fails (typically when too many hosts specified), begin adding panes to a new window
+# TODO add help output
+# TODO print error if no hosts passsed in...etc
+# TODO allow naming a window
+
+if [[ $@ = *"help"* ]]; then
+    echo "Usage: cluster-mux <host1> <host2> <host3> <host4>"
+    echo "cluster-mux is a cluster-ssh like tool for tmux"
+    echo "Specify multiple hosts as arguments or pipe them via stdin"
+    echo "to open a new window and control them simultaneously."
+    echo ""
+    echo "Alternative example 1:"
+    echo "# Accepts space delimited hosts"
+    echo "echo <host1> <host2> | cluster-mux"
+    echo ""
+    echo "Alternative example 2:"
+    echo "# Accepts newline delimited hosts"
+    echo "cat | cluster-mux"
+    exit
+fi
+
+if [[ -z $@  ]]; then
+    echo "No arguments specified - Reading from stdin"
+    hosts=()
+    while read line;
+    do
+        hosts+=($line)
+    done
+else
+    hosts=$@
+fi
+
+# Check for -P in grep
+proper_grep=$(echo test | grep -P 'test' 2>/dev/null > /dev/null; echo $?)
+
+if [[ $proper_grep -ne 0 ]]; then
+    echo "Cluster-mux requires grep have the -P parameter, is gnu grep available?"
+    exit
+fi
+
+# Create new window and panes
+new_window=`tmux new-window -dP | grep -ioP "(?<=\:)\d*"`
+control_pane=`tmux list-panes -t $new_window | grep -ioP '%\d*'`  # Requires GNU grep for -P option
+tile_window_command="tmux select-layout -t $new_window tiled  | cat > /dev/null"
+for host in ${hosts[@]}
+  do
+    # Best to tile windows several times otherwise the differing sizes of the panes will prevent new pane creation when there is actually room
+    eval $tile_window_command
+    tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 2;"
+    eval $tile_window_command
+  done
+tmux kill-pane -t $control_pane  # kill the empty pane from when the new window was created
+eval $tile_window_command
+tmux rename-window -t $new_window "cluster-mux (${#hosts[@]} hosts)"
+tmux set-window-option -t $new_window synchronize-panes on | cat > /dev/null
+
