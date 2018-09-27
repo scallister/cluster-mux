@@ -4,8 +4,6 @@
 #
 # Written by Steven Callister
 # TODO if splitting a window fails (typically when too many hosts specified), begin adding panes to a new window
-# TODO add help output
-# TODO print error if no hosts passsed in...etc
 # TODO allow naming a window
 
 if [[ $@ = *"help"* ]]; then
