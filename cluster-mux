@@ -10,7 +10,7 @@
 
 if [[ $@ = *"help"* ]]; then
     echo "Usage: cluster-mux <host1> <host2> <host3> <host4>"
-    echo "cluster-mux is a cluster-ssh like tool for tmux"
+    echo "cluster-mux is a cluster-ssh like tool for tmux."
     echo "Specify multiple hosts as arguments or pipe them via stdin"
     echo "to open a new window and control them simultaneously."
     echo ""
@@ -45,7 +45,7 @@ fi
 
 # Create new window and panes
 new_window=`tmux new-window -dP | grep -ioP "(?<=\:)\d*"`
-control_pane=`tmux list-panes -t $new_window | grep -ioP '%\d*'`  # Requires GNU grep for -P option
+control_pane=`tmux list-panes -t $new_window | grep -ioP '%\d*'`
 tile_window_command="tmux select-layout -t $new_window tiled  | cat > /dev/null"
 for host in ${hosts[@]}
   do
