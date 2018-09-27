@@ -46,7 +46,7 @@ fi
 # Create new window and panes
 new_window=`tmux new-window -dP | grep -ioP "(?<=\:)\d*"`
 control_pane=`tmux list-panes -t $new_window | grep -ioP '%\d*'`
-tile_window_command="tmux select-layout -t $new_window tiled  | cat > /dev/null"
+tile_window_command="tmux select-layout -t $new_window tiled  | cat > /dev/null"  # This pipe to cat is to support versions < Tmux 1.8. Without it the command hangs indefinitely.
 for host in ${hosts[@]}
   do
     # Best to tile windows several times otherwise the differing sizes of the panes will prevent new pane creation when there is actually room
@@ -57,5 +57,5 @@ for host in ${hosts[@]}
 tmux kill-pane -t $control_pane  # kill the empty pane from when the new window was created
 eval $tile_window_command
 tmux rename-window -t $new_window "cluster-mux (${#hosts[@]} hosts)"
-tmux set-window-option -t $new_window synchronize-panes on | cat > /dev/null
+tmux set-window-option -t $new_window synchronize-panes on | cat > /dev/null  # This pipe to cat is to support versions < Tmux 1.8. Without it the command hangs indefinitely.
 
