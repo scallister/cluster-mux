@@ -19,6 +19,10 @@ if [[ $@ = *"help"* ]]; then
     echo "Alternative example 2:"
     echo "# Accepts newline delimited hosts"
     echo "cat | cluster-mux"
+    echo ""
+    echo "If you don't want to SSH to the hosts automatically, you"
+    echo "can instead get just a new pane with each host as a variable"
+    echo "by defining NOSSH=true"
     exit
 fi
 
@@ -49,7 +53,11 @@ for host in ${hosts[@]}
   do
     # Best to tile windows several times otherwise the differing sizes of the panes will prevent new pane creation when there is actually room
     eval $tile_window_command
-    tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 2;"
+    if [ -z "$NOSSH" ]; then
+      tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 2;"
+    else
+        tmux split-window -t $new_window "echo Use '\$HOST' to access hostname '('$host')'&& HOST=$host bash"
+    fi
     eval $tile_window_command
   done
 tmux kill-pane -t $control_pane  # kill the empty pane from when the new window was created
