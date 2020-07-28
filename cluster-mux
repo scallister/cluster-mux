@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #Splits hosts out into their own windows in a tmux session.
 #
