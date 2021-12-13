@@ -37,26 +37,27 @@ else
     hosts=$@
 fi
 
-# Check for -P in grep
-proper_grep=$(echo test | grep -P 'test' 2>/dev/null > /dev/null; echo $?)
-
-if [[ $proper_grep -ne 0 ]]; then
-    echo "Cluster-mux requires grep have the -P parameter, is gnu grep available?"
-    exit
+# Check ggrep then for -P in grep
+if hash ggrep  2>/dev/null; then
+    proper_grep="ggrep"
+else
+    proper_grep="grep"
 fi
 
 # Create new window and panes
-new_window=`tmux new-window -dP | grep -ioP "(?<=\:)\d*"`
-control_pane=`tmux list-panes -t $new_window | grep -ioP '%\d*'`
+new_window=`tmux new-window -dP | $proper_grep -ioP "(?<=\:)\d*"`
+control_pane=`tmux list-panes -t $new_window | $proper_grep -ioP '%\d*'`
 tile_window_command="tmux select-layout -t $new_window tiled  | cat > /dev/null"  # This pipe to cat is to support versions < Tmux 1.8. Without it the command hangs indefinitely.
 for host in ${hosts[@]}
   do
     # Best to tile windows several times otherwise the differing sizes of the panes will prevent new pane creation when there is actually room
     eval $tile_window_command
-    if [ -z "$NOSSH" ]; then
-      tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 2;"
+    if [ -n "$NOSSH" ]; then
+      tmux split-window -t $new_window "echo Use '\$HOST' to access hostname '('$host')'&& HOST=$host bash"
+    elif [ -n "CMD" ]; then
+      tmux split-window -t $new_window "$CMD $host; echo Disconected from $host; sleep 5;"
     else
-        tmux split-window -t $new_window "echo Use '\$HOST' to access hostname '('$host')'&& HOST=$host bash"
+      tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 5;"
     fi
     eval $tile_window_command
   done
