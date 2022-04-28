@@ -54,7 +54,7 @@ for host in ${hosts[@]}
     eval $tile_window_command
     if [ -n "$NOSSH" ]; then
       tmux split-window -t $new_window "echo Use '\$HOST' to access hostname '('$host')'&& HOST=$host bash"
-    elif [ -n "CMD" ]; then
+    elif [ -n "${CMD}" ]; then
       tmux split-window -t $new_window "$CMD $host; echo Disconected from $host; sleep 5;"
     else
       tmux split-window -t $new_window "ssh -A $host; echo Disconected from $host; sleep 5;"
